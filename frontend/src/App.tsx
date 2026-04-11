@@ -1,24 +1,13 @@
+import { useEffect, useState } from 'react'
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { supabase } from './lib/supabase'
+import LoginPage from './pages/LoginPage'
+import HomePage from './pages/HomePage'
 import './App.css'
-import { useState, useEffect } from 'react'
-import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY
-)
-
-export default function App() {
-  const [loading, setLoading] = useState(false)
-  const [email, setEmail] = useState('')
-  const [claims, setClaims] = useState<Record<string, unknown> | null>(null)
-
-  // Check URL params on initial render
-  const params = new URLSearchParams(window.location.search)
-  const hasTokenHash = params.get('token_hash')
-
-  const [verifying, setVerifying] = useState(!!hasTokenHash)
-  const [authError, setAuthError] = useState<string | null>(null)
-  const [authSuccess, setAuthSuccess] = useState(false)
+function AuthCallback() {
+  const navigate = useNavigate()
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -27,88 +16,35 @@ export default function App() {
 
     if (token_hash) {
       supabase.auth
-        .verifyOtp({
-          token_hash,
-          type: (type || 'email') as 'email',
-        })
+        .verifyOtp({ token_hash, type: (type || 'email') as 'email' })
         .then(({ error }) => {
           if (error) {
-            setAuthError(error.message)
+            setError(error.message)
           } else {
-            setAuthSuccess(true)
             window.history.replaceState({}, document.title, '/')
+            navigate('/')
           }
-          setVerifying(false)
         })
-    }
-
-    supabase.auth.getClaims().then(({ data: { claims } }) => {
-      setClaims(claims)
-    })
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(() => {
-      supabase.auth.getClaims().then(({ data: { claims } }) => {
-        setClaims(claims)
-      })
-    })
-
-    return () => subscription.unsubscribe()
-  }, [])
-
-  const handleLogin = async (event: React.FormEvent) => {
-    event.preventDefault()
-    setLoading(true)
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: window.location.origin,
-      },
-    })
-    if (error) {
-      alert(error.message)
     } else {
-      alert('Check your email for the login link!')
+      // OAuth redirect — session is picked up automatically by onAuthStateChange
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) navigate('/')
+        else navigate('/login')
+      })
     }
-    setLoading(false)
-  }
+  }, [navigate])
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
-    setClaims(null)
-  }
-
-  // Show verification state
-  if (verifying) {
-    return (
-      <div className="auth-container">
-        <div className="auth-card">
-          <div className="status-icon">🔐</div>
-          <h1>Verifying</h1>
-          <p className="status-text">Confirming your magic link…</p>
-          <div style={{ marginTop: 24, textAlign: 'center' }}>
-            <span className="spinner" />
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // Show auth error
-  if (authError) {
+  if (error) {
     return (
       <div className="auth-container">
         <div className="auth-card">
           <div className="status-icon">⚠️</div>
           <h1>Authentication Failed</h1>
-          <div className="error-message">{authError}</div>
+          <div className="error-message">{error}</div>
           <button
             className="btn-secondary"
-            onClick={() => {
-              setAuthError(null)
-              window.history.replaceState({}, document.title, '/')
-            }}
+            onClick={() => navigate('/login')}
+            style={{ marginTop: 16 }}
           >
             ← Back to login
           </button>
@@ -117,61 +53,51 @@ export default function App() {
     )
   }
 
-  // Show auth success (briefly before claims load)
-  if (authSuccess && !claims) {
-    return (
-      <div className="auth-container">
-        <div className="auth-card">
-          <div className="status-icon">✅</div>
-          <h1>You're in!</h1>
-          <p className="status-text status-success">Authentication successful</p>
-          <div style={{ marginTop: 24, textAlign: 'center' }}>
-            <span className="spinner" />
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // If user is logged in, show welcome screen
-  if (claims) {
-    return (
-      <div className="auth-container">
-        <div className="auth-card">
-          <div className="status-icon">👋</div>
-          <h1>Welcome back</h1>
-          <div className="welcome-email">{claims.email as string}</div>
-          <button className="btn-secondary" onClick={handleLogout}>
-            Sign out
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  // Show login form
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <h1>Welcome</h1>
-        <p className="subtitle">Sign in with a magic link sent to your email</p>
-        <form className="auth-form" onSubmit={handleLogin}>
-          <input
-            type="email"
-            placeholder="you@example.com"
-            value={email}
-            required={true}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <button className="btn-primary" disabled={loading}>
-            {loading ? (
-              <><span className="spinner" /> Sending…</>
-            ) : (
-              'Send magic link'
-            )}
-          </button>
-        </form>
+        <div className="status-icon">🔐</div>
+        <h1>Verifying</h1>
+        <p className="status-text">Hang tight…</p>
+        <div style={{ marginTop: 24, textAlign: 'center' }}>
+          <span className="spinner" />
+        </div>
       </div>
     </div>
+  )
+}
+
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const navigate = useNavigate()
+  const [checked, setChecked] = useState(false)
+  const [authed, setAuthed] = useState(false)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setAuthed(!!session)
+      setChecked(true)
+      if (!session) navigate('/login', { replace: true })
+    })
+  }, [navigate])
+
+  if (!checked) return null
+  return authed ? <>{children}</> : null
+}
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/auth/callback" element={<AuthCallback />} />
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <HomePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   )
 }

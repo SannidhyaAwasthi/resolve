@@ -1,0 +1,109 @@
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
+import type { User } from '@supabase/supabase-js'
+
+const features = [
+  {
+    icon: '📄',
+    title: 'Upload Resume',
+    description: 'Parse and extract your resume data into structured fields.',
+    badge: 'Coming soon',
+  },
+  {
+    icon: '🎯',
+    title: 'Tailor to Job',
+    description: 'Paste a job description and get a tailored resume in seconds.',
+    badge: 'Coming soon',
+  },
+  {
+    icon: '📋',
+    title: 'Track Applications',
+    description: "Keep track of every job you've applied to in one place.",
+    badge: 'Coming soon',
+  },
+  {
+    icon: '📧',
+    title: 'Email Tracker',
+    description: 'Automatically track recruiter emails and application updates.',
+    badge: 'Coming soon',
+  },
+]
+
+export default function HomePage() {
+  const navigate = useNavigate()
+  const [user, setUser] = useState<User | null>(null)
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) navigate('/login')
+      else setUser(user)
+    })
+  }, [navigate])
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    navigate('/login')
+  }
+
+  if (!user) return null
+
+  const displayName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'there'
+  const avatarUrl = user.user_metadata?.avatar_url as string | undefined
+  const initials = displayName.slice(0, 2).toUpperCase()
+
+  return (
+    <div className="home-layout">
+      {/* Navbar */}
+      <nav className="home-nav">
+        <div className="nav-brand">
+          <div className="brand-icon">R</div>
+          <span className="brand-name">Resolve</span>
+        </div>
+        <div className="nav-user">
+          <div className="user-avatar">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt={displayName} referrerPolicy="no-referrer" />
+            ) : (
+              <span>{initials}</span>
+            )}
+          </div>
+          <span className="user-email">{user.email}</span>
+          <button className="btn-secondary" onClick={handleSignOut}>
+            Sign out
+          </button>
+        </div>
+      </nav>
+
+      {/* Hero section */}
+      <main className="home-main">
+        <div className="home-hero">
+          <div className="home-hero-badge">✨ Your AI Resume Assistant</div>
+          <h1 className="home-title">
+            Hey, {displayName}!<br />
+            <span className="home-title-accent">Let's land you that job.</span>
+          </h1>
+          <p className="home-subtitle">
+            Resolve helps you build tailored resumes, track applications, and stay on top of your job search — all in one place.
+          </p>
+        </div>
+
+        {/* Feature cards */}
+        <div className="feature-grid">
+          {features.map((f) => (
+            <div className="feature-card" key={f.title}>
+              <div className="feature-icon">{f.icon}</div>
+              <div className="feature-content">
+                <div className="feature-header">
+                  <h3>{f.title}</h3>
+                  <span className="feature-badge">{f.badge}</span>
+                </div>
+                <p>{f.description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </main>
+    </div>
+  )
+}
