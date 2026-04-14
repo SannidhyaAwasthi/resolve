@@ -1185,3 +1185,178 @@
     font-size: 12px;
   }
 }
+
+/* ═════════════════════════════════════════
+   GENERATE PAGE
+═════════════════════════════════════════ */
+.generate-main {
+  max-width: 760px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 48px 48px 80px;
+}
+
+.generate-header {
+  margin-bottom: 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.generate-title {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.6px;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.generate-subtitle {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.65;
+}
+
+.generate-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background: rgba(234, 179, 8, 0.06);
+  border: 1px solid rgba(234, 179, 8, 0.2);
+  border-radius: var(--radius-md);
+  margin-bottom: 28px;
+}
+
+.generate-warning-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+  color: #ca8a04;
+  margin-top: 1px;
+}
+
+.generate-warning p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.generate-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.generate-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.generate-field label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.generate-field textarea {
+  width: 100%;
+  min-height: 380px;
+  padding: 16px;
+  font-size: 14px;
+  font-family: 'Inter', sans-serif;
+  color: var(--text-primary);
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  outline: none;
+  resize: vertical;
+  line-height: 1.7;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.generate-field textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.generate-field textarea:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.generate-field textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.generate-field-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ═════════════════════════════════════════
+   EDITOR PAGE
+═════════════════════════════════════════ */
+
+/* Full-viewport column layout — editor fills remaining height */
+.editor-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg-primary);
+}
+
+.editor-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-secondary);
+  flex-shrink: 0;
+  gap: 16px;
+}
+
+.editor-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.editor-toolbar-error {
+  font-size: 13px;
+  color: var(--error);
+  max-width: 360px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* override width: 100% for btn-primary in toolbar */
+.editor-download-btn {
+  width: auto;
+}
+
+.editor-body {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.editor-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  height: 100%;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.editor-empty-btn {
+  width: auto;
+}

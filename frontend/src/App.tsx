@@ -4,6 +4,8 @@ import { supabase } from './lib/supabase'
 import LoginPage from './pages/LoginPage'
 import HomePage from './pages/HomePage'
 import ProfilePage from './pages/ProfilePage'
+import GeneratePage from './pages/GeneratePage'
+import EditorPage from './pages/EditorPage'
 import './App.css'
 
 function AuthCallback() {
@@ -103,6 +105,22 @@ export default function App() {
         element={
           <ProtectedRoute>
             <ProfilePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/generate"
+        element={
+          <ProtectedRoute>
+            <GeneratePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/editor"
+        element={
+          <ProtectedRoute>
+            <EditorPage />
           </ProtectedRoute>
         }
       />
