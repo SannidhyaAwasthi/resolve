@@ -18,6 +18,8 @@ public class UserDataService {
     private final EducationRepository educationRepository;
     private final SkillRepository skillRepository;
     private final ProjectRepository projectRepository;
+    private final AchievementRepository achievementRepository;
+    private final LinkRepository linkRepository;
 
     public UserDataDTO getUserData(UUID userId) {
         // 1. Find profile — the profile's id IS the userId
@@ -29,8 +31,10 @@ public class UserDataService {
         List<Education> education = educationRepository.findByUserId(userId);
         List<Skill> skills = skillRepository.findByUserId(userId);
         List<Project> projects = projectRepository.findByUserId(userId);
+        List<Achievement> achievements = achievementRepository.findByUserId(userId);
+        List<Link> links = linkRepository.findByUserId(userId);
 
         // 3. Package into DTO and return
-        return new UserDataDTO(profile, experiences, education, skills, projects);
+        return new UserDataDTO(profile, experiences, education, skills, projects, achievements, links);
     }
 }

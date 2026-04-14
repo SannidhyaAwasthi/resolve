@@ -17,4 +17,6 @@ public class UserDataDTO {
     private List<Education> education;
     private List<Skill> skills;
     private List<Project> projects;
+    private List<Achievement> achievements;
+    private List<Link> links;
 }
