@@ -1,20 +1,39 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
 
 :root {
-  --bg-primary: #0f0f11;
-  --bg-secondary: #18181b;
-  --bg-card: #1c1c21;
-  --bg-input: #25252b;
-  --border: #2e2e36;
-  --border-focus: #6366f1;
-  --text-primary: #f4f4f5;
-  --text-secondary: #a1a1aa;
-  --text-muted: #71717a;
-  --accent: #6366f1;
+  /* Backgrounds */
+  --bg-primary:   #0a0a0c;
+  --bg-secondary: #111114;
+  --bg-card:      #16161a;
+  --bg-input:     #1e1e24;
+  --bg-hover:     #202026;
+
+  /* Borders */
+  --border:        #27272f;
+  --border-subtle: #1f1f26;
+  --border-focus:  #6366f1;
+
+  /* Text */
+  --text-primary:   #f0f0f2;
+  --text-secondary: #9898a6;
+  --text-muted:     #606070;
+
+  /* Accent — indigo/violet */
+  --accent:      #6366f1;
+  --accent-dim:  rgba(99, 102, 241, 0.15);
+  --accent-glow: rgba(99, 102, 241, 0.22);
   --accent-hover: #818cf8;
-  --accent-glow: rgba(99, 102, 241, 0.25);
+
+  /* Semantic */
   --success: #22c55e;
-  --error: #ef4444;
+  --error:   #ef4444;
+
+  /* Radius scale */
+  --radius-sm:   4px;
+  --radius-md:   8px;
+  --radius-lg:  12px;
+  --radius-pill: 99px;
 
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   font-size: 16px;
