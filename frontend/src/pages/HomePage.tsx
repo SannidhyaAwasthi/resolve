@@ -5,28 +5,25 @@ import type { User } from '@supabase/supabase-js'
 
 const features = [
   {
-    icon: '📄',
-    title: 'Upload Resume',
-    description: 'Parse and extract your resume data into structured fields.',
-    badge: 'Coming soon',
+    icon: '👤',
+    title: 'Your Profile',
+    description: 'Add your experience, education, skills, and projects — the AI reads this to build your resume.',
+    badge: null,
+    path: '/profile',
   },
   {
     icon: '🎯',
     title: 'Tailor to Job',
-    description: 'Paste a job description and get a tailored resume in seconds.',
-    badge: 'Coming soon',
+    description: 'Generate and manage AI-tailored resumes for every job you apply to.',
+    badge: null,
+    path: '/resumes',
   },
   {
     icon: '📋',
     title: 'Track Applications',
     description: "Keep track of every job you've applied to in one place.",
     badge: 'Coming soon',
-  },
-  {
-    icon: '📧',
-    title: 'Email Tracker',
-    description: 'Automatically track recruiter emails and application updates.',
-    badge: 'Coming soon',
+    path: null,
   },
 ]
 
@@ -91,12 +88,16 @@ export default function HomePage() {
         {/* Feature cards */}
         <div className="feature-grid">
           {features.map((f) => (
-            <div className="feature-card" key={f.title}>
+            <div
+              className={`feature-card${f.path ? ' feature-card-link' : ''}`}
+              key={f.title}
+              onClick={() => f.path && navigate(f.path)}
+            >
               <div className="feature-icon">{f.icon}</div>
               <div className="feature-content">
                 <div className="feature-header">
                   <h3>{f.title}</h3>
-                  <span className="feature-badge">{f.badge}</span>
+                  {f.badge && <span className="feature-badge">{f.badge}</span>}
                 </div>
                 <p>{f.description}</p>
               </div>

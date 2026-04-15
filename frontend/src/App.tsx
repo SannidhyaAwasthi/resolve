@@ -6,6 +6,7 @@ import HomePage from './pages/HomePage'
 import ProfilePage from './pages/ProfilePage'
 import GeneratePage from './pages/GeneratePage'
 import EditorPage from './pages/EditorPage'
+import ResumesPage from './pages/ResumesPage'
 import './App.css'
 
 function AuthCallback() {
@@ -105,6 +106,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <ProfilePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/resumes"
+        element={
+          <ProtectedRoute>
+            <ResumesPage />
           </ProtectedRoute>
         }
       />

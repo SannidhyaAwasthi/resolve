@@ -37,7 +37,12 @@ export default function GeneratePage() {
         { jobDescription },
         { headers: { Authorization: `Bearer ${session?.access_token}` } }
       )
-      navigate('/editor', { state: { latexCode: response.data.latexCode } })
+      const latexCode: string = response.data.latexCode
+
+      // Save to generated_resumes so it appears in the Resumes page
+      await supabase.from('generated_resumes').insert({ job_description: jobDescription, latex_code: latexCode })
+
+      navigate('/editor', { state: { latexCode } })
     } catch (err) {
       if (axios.isAxiosError(err)) {
         setError(err.response?.data?.message || 'Failed to generate resume. The backend may not be running yet.')
