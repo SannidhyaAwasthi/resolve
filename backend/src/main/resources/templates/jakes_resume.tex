@@ -1,0 +1,148 @@
+%-------------------------
+% Resume Template for LLM Generation (Fixed Version)
+% Template Type: ATS-Friendly / Jake's Resume Style
+% Instructions for the LLM: 
+% 1. Replace all sample data with user information.
+% 2. Align bullet points in "Experience" and "Projects" with the provided Job Description (JD).
+% 3. Maintain all custom LaTeX commands (\resumeItem, \resumeSubheading, etc.).
+%------------------------
+
+\documentclass[a4paper,11pt]{article}
+
+\usepackage{latexsym}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{marvosym}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{verbatim}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage[english]{babel}
+\usepackage{tabularx}
+\usepackage{lmodern} % LLM: Added for better font support and to fix "Font undefined" errors
+\input{glyphtounicode}
+
+% --- Page Setup ---
+\pagestyle{fancy}
+\fancyhf{} 
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% Fixed fancyhdr warning:
+\setlength{\footskip}{4.08003pt} 
+
+\addtolength{\oddsidemargin}{-0.5in}
+\addtolength{\evensidemargin}{-0.5in}
+\addtolength{\textwidth}{1in}
+\addtolength{\topmargin}{-.5in}
+\addtolength{\textheight}{1.0in}
+
+\urlstyle{same}
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+
+% Sections formatting
+% LLM: Removed \scshape from the bold header to prevent font shape errors.
+\titleformat{\section}{
+  \vspace{-4pt}\raggedright\large\bfseries
+}{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]
+
+% Ensure PDF is machine readable (ATS Friendly)
+\pdfgentounicode=1
+
+% --- Custom Commands (DO NOT REMOVE) ---
+\newcommand{\resumeItem}[1]{
+  \item\small{{#1 \vspace{-2pt}}}
+}
+
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-2pt}\item
+    \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & #2 \\
+      \textit{\small#3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeProjectHeading}[2]{
+    \item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \small\textbf{#1} & #2 \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\renewcommand\labelitemii{$\vcenter{\hbox{\tiny$\bullet$}}$}
+
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.15in, label={}]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\newcommand{\resumeItemListStart}{\begin{itemize}}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-5pt}}
+
+%-------------------------------------------
+%%%%%%  RESUME STARTS HERE  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+% === HEADER ===
+% LLM: Use user's real name and links here.
+\begin{center}
+    \textbf{\Huge John Doe} \\ \vspace{1pt}
+    \small +1-123-456-7890 $|$ \href{mailto:john.doe@email.com}{john.doe@email.com} $|$ 
+    \href{https://linkedin.com/in/johndoe}{linkedin.com/in/johndoe} $|$
+    \href{https://github.com/johndoe}{github.com/johndoe}
+\end{center}
+
+% === EDUCATION ===
+\section{Education}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {State Technological University}{City, Country}
+      {Bachelor of Technology in Computer Science (GPA: 4.0 / 4.0)}{Aug. 2022 -- June 2026}
+    \resumeSubheading
+      {Global Secondary School}{City, Country}
+      {Higher Secondary Certificate (Percentage: 95\%)}{June 2020 -- May 2022}
+  \resumeSubHeadingListEnd
+
+% === EXPERIENCE ===
+\section{Experience}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {Software Engineering Intern}{Remote}
+      {Tech Solutions Inc.}{June 2024 -- Aug. 2024}
+      \resumeItemListStart
+        \resumeItem{Developed a responsive dashboard using \textbf{React}, improving user engagement by 20\%.}
+        \resumeItem{Optimized backend API calls in \textbf{Node.js}, reducing server latency by 15\%.}
+      \resumeItemListEnd
+  \resumeSubHeadingListEnd
+
+% === PROJECTS ===
+\section{Projects}
+    \resumeSubHeadingListStart
+      \resumeProjectHeading
+          {\textbf{E-Commerce Microservices} $|$ \emph{Java, Spring Boot, Docker}}{Oct. 2025}
+          \resumeItemListStart
+            \resumeItem{Architected a scalable platform using \textbf{Microservices} to handle 1,000+ concurrent users.}
+          \resumeItemListEnd
+    \resumeSubHeadingListEnd
+
+% === SKILLS ===
+\section{Technical Skills}
+ \begin{itemize}[leftmargin=0.15in, label={}]
+    \small{\item{
+     \textbf{Languages}{: Java, Python, JavaScript (ES6+), SQL, C++} \\
+     \textbf{Frameworks}{: React, Next.js, Node.js, Spring Boot, Tailwind CSS} \\
+     \textbf{Developer Tools}{: Git, Docker, Google Cloud Platform, VS Code, Postman}
+    }}
+ \end{itemize}
+ 
+% === ACHIEVEMENTS ===
+\section{Achievements \& Leadership}
+ \resumeItemListStart
+    \resumeItem{Won \textbf{1st Place} out of 50 teams in the National Innovation Hackathon 2024.}
+    \resumeItem{Solved \textbf{500+ problems} on competitive programming platforms like LeetCode and Codeforces.}
+ \resumeItemListEnd
+
+%-------------------------------------------
+\end{document}
