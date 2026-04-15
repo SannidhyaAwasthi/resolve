@@ -55,7 +55,8 @@ public class ResumeController {
                 userData = userDataService.getUserData(userId);
             } catch (RuntimeException e) {
                 // Return 400 if user profile data is not completely found
-                return ResponseEntity.badRequest().body("User profile data could not be properly loaded. Ensure your profile is created.");
+                return ResponseEntity.badRequest()
+                        .body("User profile data could not be properly loaded. Ensure your profile is created.");
             }
 
             // 3. Load Template and Build Prompt
@@ -78,12 +79,15 @@ public class ResumeController {
 
         } catch (Exception e) {
             // Log the actual error stack if needed and return a 500 error
-            return ResponseEntity.internalServerError().body("An error occurred while generating the resume: " + e.getMessage());
+            return ResponseEntity.internalServerError()
+                    .body("An error occurred while generating the resume: " + e.getMessage());
         }
     }
 
     @PostMapping("/compile")
     public ResponseEntity<?> compileResume(@Valid @RequestBody CompileRequest request) {
+        System.out.println("=== COMPILE ENDPOINT HIT ===");
+
         // Enforce Authentication
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || authentication.getName() == null) {
@@ -95,61 +99,58 @@ public class ResumeController {
             // 1. Create a temporary directory
             tempDir = Files.createTempDirectory("resume_compile_");
             Path texFile = tempDir.resolve("resume.tex");
-            
+
             // 2. Write the latexCode to a file called "resume.tex"
             Files.writeString(texFile, request.getLatexCode());
 
-            // 3 & 4. Run the pdflatex command TWICE
-            for (int i = 0; i < 2; i++) {
-                ProcessBuilder pb = new ProcessBuilder("pdflatex", "-interaction=nonstopmode", "resume.tex");
-                pb.directory(tempDir.toFile());
-                Process process = pb.start();
-                
-                // 5. Wait for each run to complete with a timeout of 30 seconds
-                boolean finished = process.waitFor(30, TimeUnit.SECONDS);
-                if (!finished) {
-                    process.destroyForcibly();
+            // 3. Run the "tectonic" command
+            ProcessBuilder pb = new ProcessBuilder("tectonic", "resume.tex");
+            pb.directory(tempDir.toFile());
+            // Merge stderr and stdout so we capture everything in one stream
+            pb.redirectErrorStream(true);
+
+            Process process;
+            try {
+                process = pb.start();
+            } catch (IOException e) {
+                if (e.getMessage() != null && e.getMessage().contains("Cannot run program \"tectonic\"")) {
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body("LaTeX compilation timed out");
+                            .body("LaTeX compiler not installed on the server");
                 }
+                throw e;
             }
 
-            // 6. Check if "resume.pdf" was created
+            // 4. Wait for it to complete with a timeout of 60 seconds
+            boolean finished = process.waitFor(60, TimeUnit.SECONDS);
+            if (!finished) {
+                process.destroyForcibly();
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("LaTeX compilation timed out");
+            }
+
+            // Read the process output (stdout + stderr due to redirectErrorStream)
+            String output = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+
+            System.out.println("=== TECTONIC EXIT CODE: " + process.exitValue() + " ===");
+            System.out.println("=== TECTONIC OUTPUT: " + output + " ===");
+
+
+            // 5. Check if "resume.pdf" was created
             Path pdfFile = tempDir.resolve("resume.pdf");
             if (Files.exists(pdfFile)) {
-                // 7. Read the PDF bytes and return them
+                // 6. Read the PDF bytes and return them
                 byte[] pdfBytes = Files.readAllBytes(pdfFile);
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_PDF);
-                headers.setContentDispositionFormData("attachment", "resume.pdf");
+                // "inline" allows browser to display in-page; "attachment" forces download
+                headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=resume.pdf");
                 return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
             } else {
-                // 8. Compilation failed: read "resume.log", extract errors
-                Path logFile = tempDir.resolve("resume.log");
-                StringBuilder errors = new StringBuilder();
-                if (Files.exists(logFile)) {
-                    try (BufferedReader reader = Files.newBufferedReader(logFile, StandardCharsets.UTF_8)) {
-                        String line;
-                        boolean nextLineIsContext = false;
-                        while ((line = reader.readLine()) != null) {
-                            if (line.startsWith("!")) {
-                                errors.append(line).append("\n");
-                                nextLineIsContext = true;
-                            } else if (nextLineIsContext) {
-                                errors.append(line).append("\n");
-                                nextLineIsContext = false;
-                            }
-                        }
-                    }
-                }
-                return ResponseEntity.badRequest().body("LaTeX Error:\n" + errors.toString());
+                // 7. Compilation failed: return the output from tectonic
+                return ResponseEntity.badRequest().body("LaTeX compilation failed:\n" + output);
             }
 
         } catch (IOException e) {
-            if (e.getMessage() != null && e.getMessage().contains("Cannot run program \"pdflatex\"")) {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body("LaTeX compiler not installed on the server");
-            }
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Internal error: " + e.getMessage());
         } catch (InterruptedException e) {
@@ -160,15 +161,14 @@ public class ResumeController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Internal error: " + e.getMessage());
         } finally {
-            // 9. Clean up the temporary directory
+            // 8. Clean up: delete the temporary directory and all files inside
             if (tempDir != null && Files.exists(tempDir)) {
-                try {
-                    Files.walk(tempDir)
-                            .sorted(Comparator.reverseOrder())
+                try (var walk = Files.walk(tempDir)) {
+                    walk.sorted(Comparator.reverseOrder())
                             .map(Path::toFile)
                             .forEach(File::delete);
                 } catch (Exception e) {
-                    // Ignore explicit cleanup failures; temp dirs will be cleared by the OS
+                    // Ignore explicit cleanup failures
                 }
             }
         }

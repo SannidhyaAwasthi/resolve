@@ -48,7 +48,7 @@ public class GeminiService {
             try {
                 // Wait 10 seconds
                 Thread.sleep(10000);
-                
+
                 // Attempt with Fallback Model
                 log.info("Attempting content generation with fallback model: {}", fallbackModel);
                 return callGeminiApi(fallbackModel, prompt);
@@ -64,7 +64,6 @@ public class GeminiService {
             }
         }
     }
-
 
     private String callGeminiApi(String model, String prompt) throws Exception {
         String url = String.format("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s",
