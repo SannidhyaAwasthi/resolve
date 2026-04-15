@@ -7,6 +7,8 @@ interface Project {
   name: string
   tech_stack: string
   url: string
+  start_date: string
+  end_date: string
   bullets: string[]
 }
 
@@ -75,7 +77,7 @@ export default function ProjectsSection() {
     setAdding(true)
     const { data, error } = await supabase
       .from('projects')
-      .insert({ name: '', tech_stack: '', url: '', bullets: [] })
+      .insert({ name: '', tech_stack: '', url: '', start_date: '', end_date: '', bullets: [] })
       .select()
       .single()
     if (!error && data) {
@@ -94,6 +96,8 @@ export default function ProjectsSection() {
         name: project.name,
         tech_stack: project.tech_stack,
         url: project.url,
+        start_date: project.start_date,
+        end_date: project.end_date,
         bullets: project.bullets,
       })
       .eq('id', project.id)
@@ -152,7 +156,11 @@ export default function ProjectsSection() {
                 <span className="exp-company">{project.name || 'New Project'}</span>
                 <span className="exp-meta">
                   {project.tech_stack}
-                  {project.tech_stack && project.url ? ' · ' : ''}
+                  {project.tech_stack && (project.start_date || project.url) ? ' · ' : ''}
+                  {project.start_date}
+                  {project.start_date && project.end_date ? ' – ' : ''}
+                  {project.end_date}
+                  {(project.start_date || project.end_date) && project.url ? ' · ' : ''}
                   {project.url}
                 </span>
               </div>
@@ -186,16 +194,49 @@ export default function ProjectsSection() {
                   </div>
                 </div>
 
-                {/* URL */}
-                <div className="profile-field">
-                  <label htmlFor={`url-${project.id}`}>URL</label>
-                  <input
-                    id={`url-${project.id}`}
-                    type="text"
-                    placeholder="https://myproject.com"
-                    value={project.url}
-                    onChange={e => updateProject(project.id, 'url', e.target.value)}
-                  />
+                {/* URL + Dates */}
+                <div className="profile-field-row">
+                  <div className="profile-field">
+                    <label htmlFor={`url-${project.id}`}>URL</label>
+                    <input
+                      id={`url-${project.id}`}
+                      type="text"
+                      placeholder="https://myproject.com"
+                      value={project.url}
+                      onChange={e => updateProject(project.id, 'url', e.target.value)}
+                    />
+                  </div>
+                  <div className="profile-field-row" style={{ gap: 10 }}>
+                    <div className="profile-field">
+                      <label htmlFor={`start-${project.id}`}>Start</label>
+                      <input
+                        id={`start-${project.id}`}
+                        type="date"
+                        value={project.start_date}
+                        onChange={e => updateProject(project.id, 'start_date', e.target.value)}
+                      />
+                    </div>
+                    <div className="profile-field">
+                      <label htmlFor={`end-${project.id}`}>End</label>
+                      <input
+                        id={`end-${project.id}`}
+                        type="date"
+                        value={project.end_date === 'Present' ? '' : project.end_date}
+                        disabled={project.end_date === 'Present'}
+                        onChange={e => updateProject(project.id, 'end_date', e.target.value)}
+                      />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px' }}>
+                        <input
+                          type="checkbox"
+                          id={`current-${project.id}`}
+                          checked={project.end_date === 'Present'}
+                          onChange={e => updateProject(project.id, 'end_date', e.target.checked ? 'Present' : '')}
+                          style={{ width: 'auto' }}
+                        />
+                        <label htmlFor={`current-${project.id}`} style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Ongoing</label>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Bullets */}
