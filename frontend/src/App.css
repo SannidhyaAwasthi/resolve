@@ -1320,6 +1320,11 @@
   line-height: 1.5;
 }
 
+.resumes-no-jd {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
 .resumes-actions {
   width: 100px;
   text-align: right;
@@ -1510,10 +1515,204 @@
   width: auto;
 }
 
-.editor-body {
+/* ── Spacing control ── */
+.editor-spacing-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.editor-spacing-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+}
+
+.editor-spacing-value {
+  color: var(--accent-hover);
+  font-variant-numeric: tabular-nums;
+  min-width: 3ch;
+  display: inline-block;
+}
+
+.editor-spacing-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 160px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.editor-spacing-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+
+.editor-spacing-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+}
+
+.editor-spacing-slider:hover::-webkit-slider-thumb {
+  background: var(--accent-hover);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.editor-spacing-slider:hover::-moz-range-thumb {
+  background: var(--accent-hover);
+}
+
+/* ── Two-panel split ── */
+.editor-panels {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.editor-panel-code {
+  flex: 1;
+  overflow: hidden;
+  border-right: 1px solid var(--border);
+}
+
+.editor-panel-preview {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-primary);
+}
+
+/* ── PDF preview pane ── */
+.preview-pane {
   flex: 1;
   overflow: hidden;
   position: relative;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+}
+
+.preview-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
+.preview-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  font-size: 14px;
+  text-align: center;
+  padding: 24px;
+}
+
+.preview-placeholder strong {
+  color: var(--text-secondary);
+}
+
+.preview-spinner-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 100%;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+/* ── Action bar below preview ── */
+.preview-actions {
+  flex-shrink: 0;
+  padding: 12px 16px;
+  background: var(--bg-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.preview-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.preview-action-btn {
+  width: auto;
+}
+
+/* ── Mobile tab toggle (hidden on desktop) ── */
+.editor-mobile-tabs {
+  display: none;
+  gap: 4px;
+}
+
+.editor-tab-btn {
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.editor-tab-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.editor-tab-btn:hover:not(.active) {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+}
+
+/* ── Mobile: stack panels, show tab toggle ── */
+@media (max-width: 768px) {
+  .editor-panels {
+    flex-direction: column;
+  }
+
+  .editor-panel-code,
+  .editor-panel-preview {
+    flex: 1;
+    border-right: none;
+  }
+
+  .editor-mobile-tabs {
+    display: flex;
+  }
+
+  .mobile-hidden {
+    display: none !important;
+  }
+
+  .editor-spacing-control {
+    flex: 1;
+  }
 }
 
 .editor-empty {

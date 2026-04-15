@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 
 const SAMPLE_LATEX = `\\documentclass[letterpaper,11pt]{article}
@@ -84,19 +84,47 @@ const SAMPLE_LATEX = `\\documentclass[letterpaper,11pt]{article}
  \\end{itemize}
 
 \\end{document}`
+
 import MonacoEditor from '@monaco-editor/react'
 import axios from 'axios'
 import { supabase } from '../lib/supabase'
 import type { User } from '@supabase/supabase-js'
+
+// ── Spacing helper ────────────────────────────────────────────────────
+function applySpacing(latex: string, percentage: number): string {
+  return latex.replace(/\\vspace(\*?)\{([^}]+)\}/g, (_match, star, inner) => {
+    const trimmed = inner.trim()
+    const m = trimmed.match(/^(-?\d+(?:\.\d+)?)(pt|em|ex|mm|cm|in|bp|dd|pc|sp)?$/)
+    if (!m) return _match
+    const value = parseFloat(m[1])
+    const unit = m[2] ?? ''
+    const scaled = Math.round(value * (percentage / 100) * 10) / 10
+    const formatted = scaled % 1 === 0 ? String(scaled) : scaled.toFixed(1)
+    return `\\vspace${star}{${formatted}${unit}}`
+  })
+}
 
 export default function EditorPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const [user, setUser] = useState<User | null>(null)
   const [latexCode, setLatexCode] = useState('')
+  const [spacing, setSpacing] = useState(100)
   const [downloading, setDownloading] = useState(false)
+  const [previewing, setPreviewing] = useState(false)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [saveLabel, setSaveLabel] = useState('Save')
   const [copyLabel, setCopyLabel] = useState('Copy LaTeX')
   const [error, setError] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<'code' | 'preview'>('code')
+
+  // Stores the LaTeX at 100% — only updated when the user manually edits
+  const baseLatexRef = useRef('')
+  // True while a spacing-driven setLatexCode is in flight
+  const isSpacingUpdate = useRef(false)
+  // Tracks current blob URL so we can revoke it before setting a new one
+  const previewBlobUrl = useRef<string | null>(null)
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -104,28 +132,81 @@ export default function EditorPage() {
       setUser(user)
     })
     const state = location.state as { latexCode?: string } | null
-    setLatexCode(state?.latexCode ?? SAMPLE_LATEX)
+    const code = state?.latexCode ?? SAMPLE_LATEX
+    baseLatexRef.current = code
+    setLatexCode(code)
   }, [navigate, location])
+
+  // Clean up blob URL on unmount
+  useEffect(() => {
+    return () => {
+      if (previewBlobUrl.current) {
+        URL.revokeObjectURL(previewBlobUrl.current)
+      }
+    }
+  }, [])
+
+  const handleSpacingChange = (newSpacing: number) => {
+    setSpacing(newSpacing)
+    isSpacingUpdate.current = true
+    setLatexCode(applySpacing(baseLatexRef.current, newSpacing))
+  }
+
+  const handleEditorChange = (val: string | undefined) => {
+    const code = val ?? ''
+    if (isSpacingUpdate.current) {
+      isSpacingUpdate.current = false
+    } else {
+      baseLatexRef.current = code
+    }
+    setLatexCode(code)
+  }
+
+  const compileLatex = async (): Promise<Blob> => {
+    const { data: { session } } = await supabase.auth.getSession()
+    const response = await axios.post(
+      `${import.meta.env.VITE_API_URL}/api/resume/compile`,
+      { latexCode },
+      {
+        headers: { Authorization: `Bearer ${session?.access_token}` },
+        responseType: 'blob',
+      }
+    )
+    return new Blob([response.data], { type: 'application/pdf' })
+  }
+
+  const handlePreview = async () => {
+    setPreviewing(true)
+    setError(null)
+    // Switch to preview tab on mobile
+    setActiveTab('preview')
+    try {
+      const blob = await compileLatex()
+      // Revoke previous blob URL before creating a new one
+      if (previewBlobUrl.current) {
+        URL.revokeObjectURL(previewBlobUrl.current)
+      }
+      const url = URL.createObjectURL(blob)
+      previewBlobUrl.current = url
+      setPreviewUrl(url)
+    } catch {
+      setError('PDF compilation failed. Check your LaTeX for errors and try again.')
+    } finally {
+      setPreviewing(false)
+    }
+  }
 
   const handleDownload = async () => {
     setDownloading(true)
     setError(null)
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/resume/compile`,
-        { latexCode },
-        {
-          headers: { Authorization: `Bearer ${session?.access_token}` },
-          responseType: 'blob',
-        }
-      )
-      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }))
+      const blob = await compileLatex()
+      const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
       link.download = 'resume.pdf'
       link.click()
-      window.URL.revokeObjectURL(url)
+      URL.revokeObjectURL(url)
     } catch {
       setError('PDF compilation failed. Check your LaTeX for errors and try again.')
     } finally {
@@ -137,6 +218,25 @@ export default function EditorPage() {
     await navigator.clipboard.writeText(latexCode)
     setCopyLabel('Copied!')
     setTimeout(() => setCopyLabel('Copy LaTeX'), 2000)
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    setSaveLabel('Saving…')
+    setError(null)
+    try {
+      const { error: dbError } = await supabase
+        .from('generated_resumes')
+        .insert({ latex_code: latexCode })
+      if (dbError) throw dbError
+      setSaveLabel('Saved!')
+      setTimeout(() => setSaveLabel('Save'), 2000)
+    } catch {
+      setError('Failed to save. Please try again.')
+      setSaveLabel('Save')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleSignOut = async () => {
@@ -170,36 +270,122 @@ export default function EditorPage() {
       </nav>
 
       <div className="editor-toolbar">
-        <button className="btn-ghost" onClick={() => navigate('/generate')}>← Generate</button>
-        <div className="editor-toolbar-right">
-          {error && <span className="editor-toolbar-error">{error}</span>}
-          <button className="btn-secondary" onClick={handleCopy} disabled={!latexCode}>
-            {copyLabel}
+        <div className="editor-spacing-control">
+          <label className="editor-spacing-label">
+            Spacing <span className="editor-spacing-value">{spacing}%</span>
+          </label>
+          <input
+            type="range"
+            min={50}
+            max={150}
+            step={5}
+            value={spacing}
+            onChange={e => handleSpacingChange(Number(e.target.value))}
+            className="editor-spacing-slider"
+          />
+        </div>
+
+        <div className="editor-mobile-tabs">
+          <button
+            className={`editor-tab-btn ${activeTab === 'code' ? 'active' : ''}`}
+            onClick={() => setActiveTab('code')}
+          >
+            Code
           </button>
-          <button className="btn-primary editor-download-btn" onClick={handleDownload} disabled={downloading || !latexCode}>
-            {downloading ? <><span className="spinner" /> Compiling…</> : 'Download PDF'}
+          <button
+            className={`editor-tab-btn ${activeTab === 'preview' ? 'active' : ''}`}
+            onClick={() => setActiveTab('preview')}
+          >
+            Preview
           </button>
         </div>
       </div>
 
-      <div className="editor-body">
-        <MonacoEditor
-          height="100%"
-          language="latex"
-          theme="vs-dark"
-          value={latexCode}
-          onChange={val => setLatexCode(val ?? '')}
-          options={{
-            fontSize: 14,
-            minimap: { enabled: false },
-            lineNumbers: 'on',
-            wordWrap: 'on',
-            scrollBeyondLastLine: false,
-            padding: { top: 20, bottom: 20 },
-            fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace",
-            fontLigatures: true,
-          }}
-        />
+      <div className="editor-panels">
+        {/* ── Left: Monaco Editor ── */}
+        <div className={`editor-panel-code${activeTab === 'preview' ? ' mobile-hidden' : ''}`}>
+          <MonacoEditor
+            height="100%"
+            language="latex"
+            theme="vs-dark"
+            value={latexCode}
+            onChange={handleEditorChange}
+            options={{
+              fontSize: 14,
+              minimap: { enabled: false },
+              lineNumbers: 'on',
+              wordWrap: 'on',
+              scrollBeyondLastLine: false,
+              padding: { top: 20, bottom: 20 },
+              fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace",
+              fontLigatures: true,
+            }}
+          />
+        </div>
+
+        {/* ── Right: PDF Preview + Actions ── */}
+        <div className={`editor-panel-preview${activeTab === 'code' ? ' mobile-hidden' : ''}`}>
+          <div className="preview-pane">
+            {previewing && (
+              <div className="preview-spinner-wrap">
+                <span className="spinner" />
+                <span>Compiling…</span>
+              </div>
+            )}
+            {!previewing && !previewUrl && (
+              <div className="preview-placeholder">
+                Click <strong>Preview</strong> to see your resume
+              </div>
+            )}
+            {!previewing && previewUrl && (
+              <iframe
+                src={previewUrl}
+                className="preview-iframe"
+                title="Resume PDF"
+              />
+            )}
+          </div>
+
+          <div className="preview-actions">
+            {error && <span className="editor-toolbar-error">{error}</span>}
+            <div className="preview-action-buttons">
+              <button
+                className="btn-primary preview-action-btn"
+                onClick={handlePreview}
+                disabled={previewing || !latexCode}
+              >
+                {previewing ? <><span className="spinner" /> Compiling…</> : 'Preview'}
+              </button>
+              <button
+                className="btn-secondary"
+                onClick={handleDownload}
+                disabled={downloading || !latexCode}
+              >
+                {downloading ? <><span className="spinner" /> Downloading…</> : 'Download PDF'}
+              </button>
+              <button
+                className="btn-secondary"
+                onClick={handleCopy}
+                disabled={!latexCode}
+              >
+                {copyLabel}
+              </button>
+              <button
+                className="btn-secondary"
+                onClick={handleSave}
+                disabled={saving || !latexCode}
+              >
+                {saveLabel}
+              </button>
+              <button
+                className="btn-ghost"
+                onClick={() => navigate('/generate')}
+              >
+                ← Generate Again
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )

@@ -5,7 +5,7 @@ import type { User } from '@supabase/supabase-js'
 
 interface SavedResume {
   id: string
-  job_description: string
+  job_description: string | null
   latex_code: string
   created_at: string
 }
@@ -126,8 +126,13 @@ export default function ResumesPage() {
                       })}
                     </td>
                     <td className="resumes-description">
-                      {resume.job_description.slice(0, 120)}
-                      {resume.job_description.length > 120 ? '…' : ''}
+                      {resume.job_description
+                        ? <>
+                            {resume.job_description.slice(0, 120)}
+                            {resume.job_description.length > 120 ? '…' : ''}
+                          </>
+                        : <span className="resumes-no-jd">No job description</span>
+                      }
                     </td>
                     <td className="resumes-actions" onClick={e => e.stopPropagation()}>
                       <button
