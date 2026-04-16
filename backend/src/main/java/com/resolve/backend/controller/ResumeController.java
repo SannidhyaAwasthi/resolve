@@ -98,9 +98,12 @@ public class ResumeController {
         try {
             // 1. Create a temporary directory
             tempDir = Files.createTempDirectory("resume_compile_");
+            System.out.println("=== COMPILATION DIRECTORY: " + tempDir.toAbsolutePath() + " ===");
             Path texFile = tempDir.resolve("resume.tex");
 
             // 2. Write the latexCode to a file called "resume.tex"
+            System.out.println("=== RECEIVED LATEX CODE START ===\n" + request.getLatexCode()
+                    + "\n=== RECEIVED LATEX CODE END ===");
             Files.writeString(texFile, request.getLatexCode());
 
             // 3. Run the "tectonic" command
@@ -134,7 +137,6 @@ public class ResumeController {
             System.out.println("=== TECTONIC EXIT CODE: " + process.exitValue() + " ===");
             System.out.println("=== TECTONIC OUTPUT: " + output + " ===");
 
-
             // 5. Check if "resume.pdf" was created
             Path pdfFile = tempDir.resolve("resume.pdf");
             if (Files.exists(pdfFile)) {
@@ -160,17 +162,18 @@ public class ResumeController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Internal error: " + e.getMessage());
-        } finally {
-            // 8. Clean up: delete the temporary directory and all files inside
-            if (tempDir != null && Files.exists(tempDir)) {
-                try (var walk = Files.walk(tempDir)) {
-                    walk.sorted(Comparator.reverseOrder())
-                            .map(Path::toFile)
-                            .forEach(File::delete);
-                } catch (Exception e) {
-                    // Ignore explicit cleanup failures
-                }
-            }
         }
+        // Cleanup disabled for debugging so we can see the received resume.tex
+        /*
+         * finally {
+         * if (tempDir != null && Files.exists(tempDir)) {
+         * try (var walk = Files.walk(tempDir)) {
+         * walk.sorted(Comparator.reverseOrder())
+         * .map(Path::toFile)
+         * .forEach(File::delete);
+         * } catch (Exception e) { }
+         * }
+         * }
+         */
     }
 }
