@@ -113,8 +113,10 @@ export default function EditorPage() {
   const [downloading, setDownloading] = useState(false)
   const [previewing, setPreviewing] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [showSaveBar, setShowSaveBar] = useState(false)
+  const [saveName, setSaveName] = useState('')
   const [saving, setSaving] = useState(false)
-  const [saveLabel, setSaveLabel] = useState('Save')
+  const [saveSuccess, setSaveSuccess] = useState(false)
   const [copyLabel, setCopyLabel] = useState('Copy LaTeX')
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'code' | 'preview'>('code')
@@ -220,20 +222,27 @@ export default function EditorPage() {
     setTimeout(() => setCopyLabel('Copy LaTeX'), 2000)
   }
 
-  const handleSave = async () => {
+  const generatedResumeId = (location.state as { latexCode?: string; generatedResumeId?: string } | null)?.generatedResumeId ?? null
+
+  const handleConfirmSave = async () => {
+    if (!saveName.trim()) return
     setSaving(true)
-    setSaveLabel('Saving…')
     setError(null)
     try {
       const { error: dbError } = await supabase
-        .from('generated_resumes')
-        .insert({ latex_code: latexCode })
+        .from('saved_resumes')
+        .insert({
+          name: saveName.trim(),
+          latex_code: latexCode,
+          generated_resume_id: generatedResumeId,
+        })
       if (dbError) throw dbError
-      setSaveLabel('Saved!')
-      setTimeout(() => setSaveLabel('Save'), 2000)
+      setSaveSuccess(true)
+      setShowSaveBar(false)
+      setSaveName('')
+      setTimeout(() => setSaveSuccess(false), 3000)
     } catch {
       setError('Failed to save. Please try again.')
-      setSaveLabel('Save')
     } finally {
       setSaving(false)
     }
@@ -370,13 +379,44 @@ export default function EditorPage() {
               >
                 {copyLabel}
               </button>
-              <button
-                className="btn-secondary"
-                onClick={handleSave}
-                disabled={saving || !latexCode}
-              >
-                {saveLabel}
-              </button>
+              {saveSuccess && (
+                <span className="editor-save-success">✓ Saved</span>
+              )}
+              {!showSaveBar && (
+                <button
+                  className="btn-secondary"
+                  onClick={() => setShowSaveBar(true)}
+                  disabled={!latexCode}
+                >
+                  Save Resume
+                </button>
+              )}
+              {showSaveBar && (
+                <div className="editor-save-bar">
+                  <input
+                    className="editor-save-input"
+                    type="text"
+                    placeholder="Name this resume…"
+                    value={saveName}
+                    onChange={e => setSaveName(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleConfirmSave()}
+                    autoFocus
+                  />
+                  <button
+                    className="btn-primary editor-save-confirm-btn"
+                    onClick={handleConfirmSave}
+                    disabled={!saveName.trim() || saving}
+                  >
+                    {saving ? 'Saving…' : 'Save'}
+                  </button>
+                  <button
+                    className="btn-ghost"
+                    onClick={() => { setShowSaveBar(false); setSaveName('') }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
               <button
                 className="btn-ghost"
                 onClick={() => navigate('/generate')}

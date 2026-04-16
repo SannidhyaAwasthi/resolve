@@ -39,10 +39,14 @@ export default function GeneratePage() {
       )
       const latexCode: string = response.data.latexCode
 
-      // Save to generated_resumes so it appears in the Resumes page
-      await supabase.from('generated_resumes').insert({ job_description: jobDescription, latex_code: latexCode })
+      // Persist the raw AI output — pass id to editor so it can be linked when the user saves
+      const { data: genRow } = await supabase
+        .from('generated_resumes')
+        .insert({ job_description: jobDescription, latex_code: latexCode })
+        .select('id')
+        .single()
 
-      navigate('/editor', { state: { latexCode } })
+      navigate('/editor', { state: { latexCode, generatedResumeId: genRow?.id ?? null } })
     } catch (err) {
       if (axios.isAxiosError(err)) {
         setError(err.response?.data?.message || 'Failed to generate resume. The backend may not be running yet.')

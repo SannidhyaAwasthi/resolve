@@ -1320,9 +1320,9 @@
   line-height: 1.5;
 }
 
-.resumes-no-jd {
-  color: var(--text-muted);
-  font-style: italic;
+.resumes-name {
+  color: var(--text-primary);
+  font-weight: 500;
 }
 
 .resumes-actions {
@@ -1728,4 +1728,77 @@
 
 .editor-empty-btn {
   width: auto;
+}
+
+/* ── Save bar (inline name input in action bar) ── */
+.editor-save-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.editor-save-input {
+  padding: 7px 12px;
+  font-size: 13px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  outline: none;
+  width: 200px;
+  transition: border-color 0.15s;
+}
+
+.editor-save-input::placeholder {
+  color: var(--text-muted);
+}
+
+.editor-save-input:focus {
+  border-color: var(--accent);
+}
+
+.editor-save-confirm-btn {
+  width: auto;
+}
+
+.editor-save-success {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--success);
+}
+
+.editor-save-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.editor-save-input {
+  flex: 1;
+  padding: 7px 11px;
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  color: var(--text-primary);
+  background: var(--bg-input);
+  border: 1px solid var(--border-focus);
+  border-radius: var(--radius-md);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.editor-save-input::placeholder {
+  color: var(--text-muted);
+}
+
+.editor-save-confirm-btn {
+  width: auto;
+  white-space: nowrap;
+}
+
+.editor-save-success {
+  font-size: 13px;
+  color: var(--success);
+  white-space: nowrap;
 }

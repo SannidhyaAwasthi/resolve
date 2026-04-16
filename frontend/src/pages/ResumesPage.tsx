@@ -5,7 +5,7 @@ import type { User } from '@supabase/supabase-js'
 
 interface SavedResume {
   id: string
-  job_description: string | null
+  name: string
   latex_code: string
   created_at: string
 }
@@ -22,8 +22,8 @@ export default function ResumesPage() {
       if (!user) { navigate('/login'); return }
       setUser(user)
       supabase
-        .from('generated_resumes')
-        .select('id, job_description, latex_code, created_at')
+        .from('saved_resumes')
+        .select('id, name, latex_code, created_at')
         .order('created_at', { ascending: false })
         .then(({ data }) => {
           if (data) setResumes(data as SavedResume[])
@@ -40,7 +40,7 @@ export default function ResumesPage() {
     e.stopPropagation()
     if (!window.confirm('Delete this resume?')) return
     setDeletingId(id)
-    const { error } = await supabase.from('generated_resumes').delete().eq('id', id)
+    const { error } = await supabase.from('saved_resumes').delete().eq('id', id)
     if (!error) setResumes(prev => prev.filter(r => r.id !== id))
     setDeletingId(null)
   }
@@ -80,7 +80,7 @@ export default function ResumesPage() {
           <div>
             <button className="btn-ghost" onClick={() => navigate('/')}>← Back</button>
             <h1 className="resumes-title">My Resumes</h1>
-            <p className="resumes-subtitle">Your previously generated tailored resumes.</p>
+            <p className="resumes-subtitle">Your saved tailored resumes.</p>
           </div>
           <button className="btn-primary resumes-new-btn" onClick={() => navigate('/generate')}>
             + Generate New Resume
@@ -96,10 +96,14 @@ export default function ResumesPage() {
         {!loading && resumes.length === 0 && (
           <div className="resumes-empty">
             <span className="resumes-empty-icon">📄</span>
-            <p>No resumes generated yet.</p>
+            <p>No saved resumes yet.</p>
             <p className="resumes-empty-sub">
-              Click <strong>Generate New Resume</strong> to tailor your first resume to a job.
+              Click <strong>Generate New Resume</strong> to tailor your first resume to a job,
+              then save it from the editor.
             </p>
+            <button className="btn-primary resumes-new-btn" onClick={() => navigate('/generate')}>
+              + Generate New Resume
+            </button>
           </div>
         )}
 
@@ -108,8 +112,8 @@ export default function ResumesPage() {
             <table className="resumes-table">
               <thead>
                 <tr>
+                  <th>Name</th>
                   <th>Date</th>
-                  <th>Job Description</th>
                   <th></th>
                 </tr>
               </thead>
@@ -120,19 +124,11 @@ export default function ResumesPage() {
                     className="resumes-row"
                     onClick={() => handleOpen(resume)}
                   >
+                    <td className="resumes-name">{resume.name}</td>
                     <td className="resumes-date">
                       {new Date(resume.created_at).toLocaleDateString('en-US', {
                         month: 'short', day: 'numeric', year: 'numeric',
                       })}
-                    </td>
-                    <td className="resumes-description">
-                      {resume.job_description
-                        ? <>
-                            {resume.job_description.slice(0, 120)}
-                            {resume.job_description.length > 120 ? '…' : ''}
-                          </>
-                        : <span className="resumes-no-jd">No job description</span>
-                      }
                     </td>
                     <td className="resumes-actions" onClick={e => e.stopPropagation()}>
                       <button
