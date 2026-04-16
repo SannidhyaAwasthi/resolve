@@ -53,7 +53,7 @@ export default function HomePage() {
     <div className="home-layout">
       {/* Navbar */}
       <nav className="home-nav">
-        <div className="nav-brand">
+        <div className="nav-brand" onClick={() => navigate('/')}>
           <div className="brand-icon">R</div>
           <span className="brand-name">Resolve</span>
         </div>

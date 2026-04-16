@@ -47,7 +47,7 @@ export default function ProfilePage() {
   return (
     <div className="home-layout">
       <nav className="home-nav">
-        <div className="nav-brand">
+        <div className="nav-brand" onClick={() => navigate('/')}>
           <div className="brand-icon">R</div>
           <span className="brand-name">Resolve</span>
         </div>
